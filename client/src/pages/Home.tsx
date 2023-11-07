@@ -3,10 +3,6 @@ import { PiUserCircleDuotone } from 'react-icons/pi';
 function Home() {
     return (
         <>
-            <h1 className="text-4xl font-extrabold text-center">
-                Imposteur Epitech
-            </h1>
-
             <div className="flex flex-col lg:flex-row gap-4 mt-8">
                 <div className="rounded-xl bg-zinc-800 p-8 w-full text-center flex items-center flex-col">
                     <h2 className="text-2xl font-bold mb-4 self-start">

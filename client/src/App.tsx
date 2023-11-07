@@ -1,14 +1,22 @@
 import { Outlet } from 'react-router-dom';
+import { BsIncognito } from 'react-icons/bs';
 
 function App() {
     return (
-        <>
-            <main className="w-screen min-h-screen bg-zinc-900 text-white p-2">
-                <div className="container mx-auto pt-8">
+        <div className="bg-zinc-900 text-white p-2 min-h-screen w-screen">
+            <header className="w-full pt-8">
+                <h1 className="text-4xl font-extrabold text-center">
+                    Imposteur Epitech
+                    <BsIncognito className="inline-block ml-2" />
+                </h1>
+            </header>
+
+            <main className="w-full">
+                <div className="container mx-auto">
                     <Outlet />
                 </div>
             </main>
-        </>
+        </div>
     );
 }
 
