@@ -1,13 +1,15 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { PiUserCircleDuotone } from 'react-icons/pi';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/Auth';
 import Loader from '../components/Loader';
+import IRoom from '../interfaces/Room';
 
 function Home() {
     const { isAuth, isLoading, user, signIn, socket } = useAuth();
-    const [username, setUsername] = useState<string>('');
     const navigate = useNavigate();
+    const [username, setUsername] = useState<string>('');
+    const [rooms, setRooms] = useState<IRoom[]>([]);
 
     const handleLogin = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -49,6 +51,28 @@ function Home() {
             console.error(error);
         }
     };
+
+    const fetchRooms = async () => {
+        try {
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/api/rooms`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message);
+            }
+
+            setRooms(data.rooms);
+        } catch (error: any) {
+            console.error(error);
+        }
+    };
+
+    useEffect(() => {
+        fetchRooms();
+    }, []);
 
     return (
         <>
@@ -122,9 +146,32 @@ function Home() {
                     Liste des parties
                 </h2>
 
-                <p className="text-zinc-400 mb-2">
-                    Connectez-vous avant de pouvoir rejoindre une partie.
-                </p>
+                {!isAuth ? (
+                    <p className="text-zinc-400 mb-2">
+                        Connectez-vous avant de pouvoir rejoindre une partie.
+                    </p>
+                ) : rooms.length < 1 ? (
+                    <p className="text-zinc-400 mb-2">
+                        Aucune partie n'est en cours.
+                    </p>
+                ) : (
+                    <ul className="flex gap-2 flex-wrap self-start">
+                        {rooms.map((room) => (
+                            <li key={room.id}>
+                                {room.users.length > 0 ? (
+                                    <Link
+                                        to={`/room/${room.id}`}
+                                        className="font-medium mr-2 px-4 py-2 rounded bg-gray-700 text-blue-400 border hover:border-blue-400 transition-all"
+                                    >
+                                        Room de {room.users[0].username}
+                                    </Link>
+                                ) : (
+                                    <></>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </div>
         </>
     );

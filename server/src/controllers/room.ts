@@ -13,3 +13,7 @@ export const addRoom = (req: Request, res: Response) => {
     rooms.push(newRoom);
     res.status(201).json({ room: newRoom });
 };
+
+export const getRooms = (_req: Request, res: Response) => {
+    res.status(200).json({ rooms });
+};
