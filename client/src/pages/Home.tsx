@@ -1,13 +1,15 @@
 import { FormEvent, useState } from 'react';
 import { PiUserCircleDuotone } from 'react-icons/pi';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/Auth';
 import Loader from '../components/Loader';
 
 function Home() {
-    const { isAuth, isLoading, user, signIn } = useAuth();
+    const { isAuth, isLoading, user, signIn, socket } = useAuth();
     const [username, setUsername] = useState<string>('');
+    const navigate = useNavigate();
 
-    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    const handleLogin = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (username.length < 3 || username.length > 16) {
@@ -15,6 +17,37 @@ function Home() {
         }
 
         signIn(username);
+    };
+
+    const handleCreate = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        try {
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/api/rooms`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user,
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message);
+            }
+
+            console.log(data);
+            socket?.emit('join', data.room.id);
+            navigate(`/room/${data.room.id}`);
+        } catch (error: any) {
+            console.error(error);
+        }
     };
 
     return (
@@ -28,7 +61,7 @@ function Home() {
                     {!isAuth ? (
                         <form
                             className="h-full flex flex-col justify-center gap-4"
-                            onSubmit={handleSubmit}
+                            onSubmit={handleLogin}
                         >
                             <input
                                 type="text"
@@ -57,11 +90,14 @@ function Home() {
                                 </h3>
                             </div>
 
-                            <div className="flex gap-2 flex-col mt-4">
+                            <form
+                                className="flex gap-2 flex-col mt-4"
+                                onSubmit={handleCreate}
+                            >
                                 <button className="border focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 bg-zinc-800 text-white border-zinc-600 hover:bg-zinc-700 hover:border-zinc-600 focus:ring-zinc-700 transition-all">
                                     Créer une partie
                                 </button>
-                            </div>
+                            </form>
                         </>
                     )}
                 </div>

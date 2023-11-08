@@ -29,10 +29,12 @@ export const AuthProvider = ({ children }: IProviderProps) => {
             },
         });
 
-        setSocket(newSocket);
-        setUser({ id: newSocket.id, username });
-        setIsAuth(true);
-        setIsLoading(false);
+        newSocket.on('connect', () => {
+            setSocket(newSocket);
+            setUser({ id: newSocket.id, username });
+            setIsAuth(true);
+            setIsLoading(false);
+        });
     };
 
     const value = {

@@ -2,12 +2,12 @@ import IUser from '../interfaces/user';
 
 const users: IUser[] = [];
 
-export const addUser = (user: IUser) => {
-    users.push(user);
+export const addUser = (newUser: IUser) => {
+    users.push(newUser);
 };
 
-export const deleteUser = (id: string) => {
-    const index = users.findIndex((user) => user.id === id);
+export const deleteUser = (userId: string) => {
+    const index = users.findIndex((user) => user.id === userId);
     if (index !== -1) {
         users.splice(index, 1);
     }

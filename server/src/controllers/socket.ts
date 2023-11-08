@@ -20,5 +20,10 @@ export const handleSocket = (server: any, corsOptions: ICorsOptions) => {
             deleteUser(socket.id);
             console.log('user disconnected');
         });
+
+        socket.on('join', (room) => {
+            socket.join(room);
+            console.log(`user ${newUser.username} joined room ${room}`);
+        });
     });
 };
