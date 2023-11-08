@@ -34,3 +34,12 @@ export const leaveRooms = (user: IUser) => {
         }
     });
 };
+
+export const getRoom = (req: Request, res: Response) => {
+    const room = rooms.find((r) => r.id === req.params.id);
+    if (room) {
+        res.status(200).json({ room });
+    } else {
+        res.status(404).json({ message: 'Room not found' });
+    }
+};

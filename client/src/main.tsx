@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App.tsx';
 import ErrorPage from './ErrorPage.tsx';
 import Home from './pages/Home.tsx';
+import Room from './pages/Room.tsx';
 import { AuthProvider } from './contexts/Auth.tsx';
 import './index.css';
 
@@ -16,6 +17,10 @@ const router = createBrowserRouter([
             {
                 path: '/',
                 element: <Home />,
+            },
+            {
+                path: '/room/:id',
+                element: <Room />,
             },
         ],
     },
