@@ -1,7 +1,8 @@
 import { Server } from 'socket.io';
 import ICorsOptions from '../interfaces/corsOptions';
-import { addUser, deleteUser } from './user';
 import IUser from '../interfaces/user';
+import { addUser, deleteUser } from './user';
+import { leaveRooms } from './room';
 
 export const handleSocket = (server: any, corsOptions: ICorsOptions) => {
     const io = new Server(server, {
@@ -17,6 +18,7 @@ export const handleSocket = (server: any, corsOptions: ICorsOptions) => {
         console.log('a user connected');
 
         socket.on('disconnect', () => {
+            leaveRooms(newUser);
             deleteUser(socket.id);
             console.log('user disconnected');
         });

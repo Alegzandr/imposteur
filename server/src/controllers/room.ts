@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { v4 } from 'uuid';
 import IRoom from '../interfaces/room';
+import IUser from '../interfaces/user';
 
 const rooms: IRoom[] = [];
 
@@ -16,4 +17,20 @@ export const addRoom = (req: Request, res: Response) => {
 
 export const getRooms = (_req: Request, res: Response) => {
     res.status(200).json({ rooms });
+};
+
+export const leaveRooms = (user: IUser) => {
+    rooms.forEach((room) => {
+        const index = room.users.findIndex((u) => u.id === user.id);
+        if (index !== -1) {
+            room.users.splice(index, 1);
+        }
+
+        if (room.users.length === 0) {
+            const roomIndex = rooms.findIndex((r) => r.id === room.id);
+            if (roomIndex !== -1) {
+                rooms.splice(roomIndex, 1);
+            }
+        }
+    });
 };
