@@ -26,6 +26,7 @@ export const handleSocket = (server: any, corsOptions: ICorsOptions) => {
         socket.on('join', (roomId) => {
             joinRoom(roomId, newUser);
             socket.join(roomId);
+            io.to(roomId).emit('userJoined', newUser);
             console.log(`user ${newUser.username} joined room ${roomId}`);
         });
 

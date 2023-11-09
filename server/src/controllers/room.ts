@@ -135,7 +135,11 @@ export const setUserNotReady = (user: IUser, roomId: string) => {
 
 export const joinRoom = (roomId: string, user: IUser) => {
     const room = rooms.find((r) => r.id === roomId);
-    if (room && room.users.length < 10) {
+    if (
+        room &&
+        room.users.length < 10 &&
+        !room.users.find((u) => u.id === user.id)
+    ) {
         room.users.push(user);
     }
 };

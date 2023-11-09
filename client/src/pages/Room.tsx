@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import IRoom from '../interfaces/Room';
+import IUser from '../interfaces/User';
 import { useAuth } from '../contexts/Auth';
 
 function Room() {
@@ -43,6 +44,26 @@ function Room() {
             navigate('/');
         }
     };
+
+    useEffect(() => {
+        const handleUserJoined = (user: IUser) => {
+            setRoom((prevRoom) => {
+                if (prevRoom && !prevRoom.users.some((u) => u.id === user.id)) {
+                    return {
+                        ...prevRoom,
+                        users: [...prevRoom.users, user],
+                    };
+                }
+                return prevRoom;
+            });
+        };
+
+        socket?.on('userJoined', handleUserJoined);
+
+        return () => {
+            socket?.off('userJoined', handleUserJoined);
+        };
+    }, [socket]);
 
     useEffect(() => {
         fetchRoom();
