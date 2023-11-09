@@ -6,7 +6,7 @@ function App() {
         <div className="bg-zinc-900 text-white p-2 min-h-screen w-screen">
             <header className="w-full pt-8">
                 <h1 className="text-4xl font-extrabold text-center">
-                    Imposteur Epitech
+                    Imposteur V2
                     <BsIncognito className="inline-block ml-2" />
                 </h1>
             </header>

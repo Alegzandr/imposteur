@@ -8,6 +8,7 @@ function Room() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [room, setRoom] = useState<IRoom | null>(null);
+    const [isReady, setIsReady] = useState(false);
     const { socket, isAuth } = useAuth();
 
     const fetchRoom = async () => {
@@ -45,6 +46,11 @@ function Room() {
         }
     };
 
+    const handleReady = () => {
+        setIsReady(true);
+        socket?.emit('ready', id);
+    };
+
     useEffect(() => {
         const handleUserJoined = (user: IUser) => {
             setRoom((prevRoom) => {
@@ -72,6 +78,11 @@ function Room() {
     return (
         <>
             <h2>Lobby</h2>
+
+            <button onClick={handleReady} type="button">
+                {isReady ? 'Retirer prêt' : 'Mettre prêt'}
+            </button>
+
             <ul>
                 {room?.users.map((player) => (
                     <li key={player.id}>{player.username}</li>

@@ -21,7 +21,13 @@ const getWords = async () => {
 
         for (let i = 0; i < 13; i++) {
             const randomIndex = Math.floor(Math.random() * wordPairs.length);
-            words.push(wordPairs[randomIndex]);
+            const pair = wordPairs[randomIndex];
+
+            if (Math.random() > 0.5) {
+                words.push({ word: pair.antonym, antonym: pair.word });
+            } else {
+                words.push(pair);
+            }
         }
     } catch (err) {
         console.error('Error reading the file:', err);

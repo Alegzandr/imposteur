@@ -40,9 +40,11 @@ export const handleSocket = (server: any, corsOptions: ICorsOptions) => {
         socket.on('ready', (roomId) => {
             const allReady = setUserReady(newUser, roomId);
             io.to(roomId).emit('ready', newUser);
+            console.log(`user ${newUser.username} is ready`);
 
             if (allReady) {
                 io.to(roomId).emit('startGame');
+                console.log(`game started in room ${roomId}`);
             }
         });
 
