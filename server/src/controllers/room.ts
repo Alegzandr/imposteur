@@ -113,7 +113,10 @@ export const setUserReady = (user: IUser, roomId: string) => {
         room.gameState.readyUsers = [user];
     }
 
-    if (room.gameState.readyUsers.length === room.users.length) {
+    if (
+        room.gameState.readyUsers.length === room.users.length &&
+        room.users.length > 1
+    ) {
         room.gameState.phase = 'game';
         room.gameState.impostor =
             room.users[Math.floor(Math.random() * room.users.length)];
