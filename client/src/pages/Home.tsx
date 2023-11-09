@@ -137,7 +137,7 @@ function Home() {
                     )}
                 </div>
 
-                <div className="rounded-xl bg-zinc-800 p-8 w-full">
+                <div className="hidden lg:block rounded-xl bg-zinc-800 p-8 w-full">
                     <h2 className="text-2xl font-bold mb-4">Règles</h2>
 
                     <p className="text-zinc-400 text-lg mb-2">

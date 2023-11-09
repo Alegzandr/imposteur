@@ -6,6 +6,7 @@ interface gameState {
     readyUsers?: IUser[];
     words?: IWord[];
     impostor?: IUser;
+    currentPlayer?: IUser;
 }
 
 export default gameState;

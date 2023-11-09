@@ -38,20 +38,27 @@ const getWords = async () => {
 };
 
 const deleteWordsAndImpostor = (room: IRoom) => {
-    const newRoom = { ...room };
-    delete newRoom.gameState.words;
-    delete newRoom.gameState.impostor;
+    const newRoom = {
+        ...room,
+        gameState: {
+            ...room.gameState,
+            words: undefined,
+            impostor: undefined,
+        },
+    };
+
     return newRoom;
 };
 
 export const addRoom = async (req: Request, res: Response) => {
+    const words = await getWords();
     const newRoom: IRoom = {
         id: v4(),
         users: [req.body.user],
         gameState: {
             phase: 'lobby',
             readyUsers: [],
-            words: await getWords(),
+            words,
         },
     };
 
@@ -117,7 +124,7 @@ export const setUserReady = (user: IUser, roomId: string) => {
         room.gameState.readyUsers.length === room.users.length &&
         room.users.length > 1
     ) {
-        room.gameState.phase = 'game';
+        room.gameState.phase = 'round-1';
         room.gameState.impostor =
             room.users[Math.floor(Math.random() * room.users.length)];
 
@@ -150,5 +157,35 @@ export const joinRoom = (roomId: string, user: IUser) => {
         !room.users.find((u) => u.id === user.id)
     ) {
         room.users.push(user);
+    }
+};
+
+const isImpostor = (user: IUser, room: IRoom) => {
+    return user.id === room.gameState.impostor?.id;
+};
+
+export const getCurrentWord = (req: Request, res: Response) => {
+    const room = rooms.find((r) => r.id === req.params.id);
+
+    if (
+        room &&
+        room.gameState.phase &&
+        !room.gameState.phase.startsWith('round-')
+    ) {
+        res.status(404).json({ message: 'Phase is not round' });
+        return;
+    }
+
+    const user = room?.users.find((u) => u.id === req.body.user.id);
+    const roundIndex = parseInt(room?.gameState.phase.substring(6) || '') - 1;
+
+    if (user && room && !isImpostor(user, room)) {
+        res.status(200).json({
+            word: room?.gameState?.words?.[roundIndex].word,
+        });
+    } else if (user && room && isImpostor(user, room)) {
+        res.status(200).json({
+            word: room?.gameState?.words?.[roundIndex].antonym,
+        });
     }
 };
