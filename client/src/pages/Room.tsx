@@ -136,7 +136,10 @@ function Room() {
 
         if (
             currentHint === currentWord ||
-            !currentHint.replace(/<[^>]*>?/gm, '').trim()
+            !currentHint.replace(/<[^>]*>?/gm, '').trim() ||
+            room?.gameState?.hints?.some(
+                (h) => h.word.toLowerCase() === currentHint.toLowerCase()
+            )
         ) {
             return;
         }
