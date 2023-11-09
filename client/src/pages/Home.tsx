@@ -6,7 +6,7 @@ import Loader from '../components/Loader';
 import IRoom from '../interfaces/Room';
 
 function Home() {
-    const { isAuth, isLoading, user, signIn, socket } = useAuth();
+    const { isAuth, isLoading, user, signIn } = useAuth();
     const navigate = useNavigate();
     const [username, setUsername] = useState<string>('');
     const [rooms, setRooms] = useState<IRoom[]>([]);
@@ -45,7 +45,6 @@ function Home() {
             }
 
             console.log(data);
-            socket?.emit('join', data.room.id);
             navigate(`/room/${data.room.id}`);
         } catch (error: any) {
             console.error(error);
