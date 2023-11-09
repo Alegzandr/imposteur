@@ -2,7 +2,7 @@ import { Server } from 'socket.io';
 import ICorsOptions from '../interfaces/corsOptions';
 import IUser from '../interfaces/user';
 import { addUser, deleteUser } from './user';
-import { leaveRooms } from './room';
+import { leaveRooms, setUserReady, setUserNotReady, joinRoom } from './room';
 
 export const handleSocket = (server: any, corsOptions: ICorsOptions) => {
     const io = new Server(server, {
@@ -23,9 +23,24 @@ export const handleSocket = (server: any, corsOptions: ICorsOptions) => {
             console.log('user disconnected');
         });
 
-        socket.on('join', (room) => {
-            socket.join(room);
-            console.log(`user ${newUser.username} joined room ${room}`);
+        socket.on('join', (roomId) => {
+            joinRoom(roomId, newUser);
+            socket.join(roomId);
+            console.log(`user ${newUser.username} joined room ${roomId}`);
+        });
+
+        socket.on('ready', (roomId) => {
+            const allReady = setUserReady(newUser, roomId);
+            io.to(roomId).emit('ready', newUser);
+
+            if (allReady) {
+                io.to(roomId).emit('startGame');
+            }
+        });
+
+        socket.on('notReady', (roomId) => {
+            setUserNotReady(newUser, roomId);
+            io.to(roomId).emit('notReady', newUser);
         });
     });
 };
