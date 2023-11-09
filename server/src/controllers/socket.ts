@@ -2,7 +2,13 @@ import { Server } from 'socket.io';
 import ICorsOptions from '../interfaces/corsOptions';
 import IUser from '../interfaces/user';
 import { addUser, deleteUser } from './user';
-import { leaveRooms, setUserReady, setUserNotReady, joinRoom } from './room';
+import {
+    leaveRooms,
+    setUserReady,
+    setUserNotReady,
+    joinRoom,
+    addHint,
+} from './room';
 
 export const handleSocket = (server: any, corsOptions: ICorsOptions) => {
     const io = new Server(server, {
@@ -52,6 +58,12 @@ export const handleSocket = (server: any, corsOptions: ICorsOptions) => {
             setUserNotReady(newUser, roomId);
             io.to(roomId).emit('notReady', newUser);
             console.log(`user ${newUser.username} is not ready`);
+        });
+
+        socket.on('addHint', (roomId, hint) => {
+            addHint(hint, newUser, roomId);
+            io.to(roomId).emit('newHint', { word: hint, user: newUser });
+            console.log(`user ${newUser.username} sent a hint`);
         });
     });
 };

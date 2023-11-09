@@ -127,6 +127,8 @@ export const setUserReady = (user: IUser, roomId: string) => {
         room.gameState.phase = 'round-1';
         room.gameState.impostor =
             room.users[Math.floor(Math.random() * room.users.length)];
+        room.gameState.currentPlayer =
+            room.users[Math.floor(Math.random() * room.users.length)];
 
         return true;
     }
@@ -187,5 +189,51 @@ export const getCurrentWord = (req: Request, res: Response) => {
         res.status(200).json({
             word: room?.gameState?.words?.[roundIndex].antonym,
         });
+    }
+};
+
+const getNextPlayer = (room: IRoom) => {
+    const currentPlayerIndex = room.users.findIndex(
+        (u) => u.id === room.gameState.currentPlayer?.id
+    );
+    const nextPlayerIndex =
+        currentPlayerIndex === room.users.length - 1
+            ? 0
+            : currentPlayerIndex + 1;
+
+    return room.users[nextPlayerIndex];
+};
+
+export const addHint = (word: string, user: IUser, roomId: string) => {
+    const room = rooms.find((r) => r.id === roomId);
+    const userHints = room?.gameState.hints?.filter(
+        (h) => h.user.id === user.id
+    );
+
+    if (
+        !room?.gameState.phase.startsWith('round-') ||
+        room.gameState.currentPlayer !== user ||
+        (userHints && userHints.length >= 2)
+    ) {
+        return;
+    }
+
+    if (room.gameState.hints) {
+        room.gameState.hints.push({ word, user });
+    } else {
+        room.gameState.hints = [{ word, user }];
+    }
+
+    const nextPlayer = getNextPlayer(room);
+    room.gameState.currentPlayer = nextPlayer;
+};
+
+export const getCurrentPlayer = (req: Request, res: Response) => {
+    const room = rooms.find((r) => r.id === req.params.id);
+
+    if (room && room.gameState.phase.startsWith('round-')) {
+        res.status(200).json({ currentPlayer: room.gameState.currentPlayer });
+    } else {
+        res.status(404).json({ message: 'Phase is not round' });
     }
 };

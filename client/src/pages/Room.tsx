@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Ready from '../components/Ready';
 import NotReady from '../components/NotReady';
 import IRoom from '../interfaces/Room';
 import IUser from '../interfaces/User';
 import { useAuth } from '../contexts/Auth';
+import capitalize from '../utils/capitalize';
 
 function Room() {
     const { id } = useParams();
@@ -13,7 +14,6 @@ function Room() {
     const [isReady, setIsReady] = useState(false);
     const [currentWord, setCurrentWord] = useState('');
     const [currentHint, setCurrentHint] = useState('');
-    const [isOwnTurn, setIsOwnTurn] = useState(false);
     const { socket, isAuth, user } = useAuth();
 
     const fetchRoom = async () => {
@@ -58,10 +58,6 @@ function Room() {
         }
     };
 
-    const capitalize = (str: string) => {
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    };
-
     const fetchCurrentWord = async () => {
         try {
             const response = await fetch(
@@ -87,6 +83,66 @@ function Room() {
         } catch (error: any) {
             console.error(error);
         }
+    };
+
+    const fetchCurrentPlayer = async () => {
+        try {
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/api/rooms/${id}/player`,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message);
+            }
+
+            setRoom((prevRoom) => {
+                if (prevRoom) {
+                    return {
+                        ...prevRoom,
+                        gameState: {
+                            ...prevRoom.gameState,
+                            currentPlayer: data.currentPlayer,
+                        },
+                    };
+                }
+                return prevRoom;
+            });
+        } catch (error: any) {
+            setRoom((prevRoom) => {
+                if (prevRoom) {
+                    return {
+                        ...prevRoom,
+                        gameState: {
+                            ...prevRoom.gameState,
+                            currentPlayer: undefined,
+                        },
+                    };
+                }
+                return prevRoom;
+            });
+            console.error(error);
+        }
+    };
+
+    const handleAddHint = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        if (
+            currentHint === currentWord ||
+            !currentHint.replace(/<[^>]*>?/gm, '').trim()
+        ) {
+            return;
+        }
+
+        socket?.emit('addHint', id, currentHint.trim());
+        setCurrentHint('');
     };
 
     useEffect(() => {
@@ -172,6 +228,7 @@ function Room() {
             setRoom((prevRoom) => {
                 if (prevRoom) {
                     fetchCurrentWord();
+                    fetchCurrentPlayer();
                     return {
                         ...prevRoom,
                         gameState: {
@@ -188,6 +245,30 @@ function Room() {
 
         return () => {
             socket?.off('startGame', handleStartGame);
+        };
+    }, [socket]);
+
+    useEffect(() => {
+        const handleNewHint = (hint: { word: string; user: IUser }) => {
+            setRoom((prevRoom) => {
+                if (prevRoom) {
+                    fetchCurrentPlayer();
+                    return {
+                        ...prevRoom,
+                        gameState: {
+                            ...prevRoom.gameState,
+                            hints: [...(prevRoom.gameState.hints || []), hint],
+                        },
+                    };
+                }
+                return prevRoom;
+            });
+        };
+
+        socket?.on('newHint', handleNewHint);
+
+        return () => {
+            socket?.off('newHint', handleNewHint);
         };
     }, [socket]);
 
@@ -246,41 +327,57 @@ function Room() {
                 Tour {room.gameState.phase.substring(6)}/13
             </h3>
 
-            <form className="w-full flex items-center gap-4 mt-4">
+            <form
+                className="w-full flex items-center gap-4 mt-4"
+                onSubmit={handleAddHint}
+            >
                 <input
                     type="text"
                     className="text-sm rounded-lg block w-full p-4 bg-zinc-700 border-zinc-600 placeholder-zinc-400 text-white focus:ring-zinc-500 focus:border-zinc-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder={isOwnTurn ? 'Votre indice' : 'En attente...'}
+                    placeholder={
+                        room?.gameState?.currentPlayer?.id === user?.id
+                            ? 'Votre indice'
+                            : 'En attente...'
+                    }
                     required
                     value={currentHint}
                     onChange={(e) =>
-                        setCurrentHint(capitalize(e.target.value.trim()))
+                        setCurrentHint(capitalize(e.target.value.trimStart()))
                     }
                     min={1}
                     max={32}
-                    disabled={!isOwnTurn}
+                    disabled={room?.gameState?.currentPlayer?.id !== user?.id}
                 />
                 <button
                     className="border focus:outline-none font-medium rounded-lg text-sm px-5 py-4 bg-zinc-800 text-white border-zinc-600 hover:bg-zinc-700 hover:border-zinc-600 focus:ring-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                    disabled={!isOwnTurn}
+                    disabled={room?.gameState?.currentPlayer?.id !== user?.id}
                 >
                     Valider
                 </button>
             </form>
 
             <div className="flex flex-col gap-4 mt-4 lg:flex-row lg:flex-wrap">
-                {room?.users.map((player) => (
+                {room?.users.map((player, index) => (
                     <div
-                        className={`rounded-xl bg-zinc-800 p-8 w-full flex gap-4 justify-between px-4 lg:flex-col lg:w-1/4`}
-                        key={player.id}
+                        className={`${
+                            room?.gameState?.currentPlayer?.id === player?.id
+                                ? 'outline'
+                                : ''
+                        } rounded-xl bg-zinc-800 p-8 w-full flex gap-4 justify-between px-4 lg:flex-col lg:w-1/4`}
+                        key={`player-${index + 1}`}
                     >
                         <h2 className="text-2xl font-bold mb-4 mt-4 text-center lg:mt-0">
                             {player.username}
                         </h2>
 
                         <ul className="flex flex-col gap-4 items-center justify-center">
-                            <li>Mot 1</li>
-                            <li>Mot 2</li>
+                            {room?.gameState?.hints
+                                ?.filter((h) => h.user.id === player?.id)
+                                .map((hint, index) => (
+                                    <li key={`hint-${index + 1}`}>
+                                        {hint.word}
+                                    </li>
+                                ))}
                         </ul>
                     </div>
                 ))}

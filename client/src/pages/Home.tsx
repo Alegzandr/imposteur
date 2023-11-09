@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/Auth';
 import Loader from '../components/Loader';
 import IRoom from '../interfaces/Room';
+import capitalize from '../utils/capitalize';
 
 function Home() {
     const { isAuth, isLoading, user, signIn, socket } = useAuth();
@@ -105,7 +106,9 @@ function Home() {
                                 required
                                 value={username}
                                 onChange={(e) =>
-                                    setUsername(e.target.value.trim())
+                                    setUsername(
+                                        capitalize(e.target.value.trim())
+                                    )
                                 }
                                 min={3}
                                 max={16}
