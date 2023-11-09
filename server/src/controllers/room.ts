@@ -1,31 +1,32 @@
 import { Request, Response } from 'express';
 import { v4 } from 'uuid';
+import path from 'path';
+import util from 'util';
 import fs from 'fs';
 import IRoom from '../interfaces/room';
 import IUser from '../interfaces/user';
+import IWord from '../interfaces/word';
 
 const rooms: IRoom[] = [];
 
-const getWords = () => {
-    const words: { word: string; antonym: string }[] = [];
+const readFile = util.promisify(fs.readFile);
 
-    fs.readFile('../data/words.json', 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading the file:', err);
-            return;
-        }
+const getWords = async () => {
+    const words: IWord[] = [];
+    const filePath = path.join(__dirname, '..', 'data', 'antonyms.json');
+
+    try {
+        const data = await readFile(filePath, 'utf8');
         const wordPairs = JSON.parse(data);
 
-        function getRandomWordPair() {
-            const randomIndex = Math.floor(Math.random() * wordPairs.length);
-            return wordPairs[randomIndex];
-        }
-
         for (let i = 0; i < 13; i++) {
-            const randomPair = getRandomWordPair();
-            words.push(randomPair);
+            const randomIndex = Math.floor(Math.random() * wordPairs.length);
+            words.push(wordPairs[randomIndex]);
         }
-    });
+    } catch (err) {
+        console.error('Error reading the file:', err);
+        return [];
+    }
 
     return words;
 };
@@ -37,14 +38,14 @@ const deleteWordsAndImpostor = (room: IRoom) => {
     return newRoom;
 };
 
-export const addRoom = (req: Request, res: Response) => {
+export const addRoom = async (_req: Request, res: Response) => {
     const newRoom: IRoom = {
         id: v4(),
         users: [],
         gameState: {
             phase: 'lobby',
             readyUsers: [],
-            words: getWords(),
+            words: await getWords(),
         },
     };
 

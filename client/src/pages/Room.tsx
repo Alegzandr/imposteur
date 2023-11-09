@@ -7,7 +7,7 @@ function Room() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [room, setRoom] = useState<IRoom | null>(null);
-    const { user, socket, isAuth } = useAuth();
+    const { socket, isAuth } = useAuth();
 
     const fetchRoom = async () => {
         if (!isAuth) {
@@ -36,7 +36,7 @@ function Room() {
                 throw new Error('Game has already started.');
             }
 
-            socket?.emit('joinRoom', { roomId: id });
+            socket?.emit('join', id);
             setRoom(data.room);
         } catch (error: any) {
             console.error(error);

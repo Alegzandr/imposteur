@@ -1,9 +1,10 @@
 import IUser from './user';
+import IWord from './word';
 
 interface gameState {
     phase: string;
     readyUsers?: IUser[];
-    words?: { word: string; antonym: string }[];
+    words?: IWord[];
     impostor?: IUser;
 }
 
