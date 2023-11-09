@@ -61,9 +61,12 @@ export const handleSocket = (server: any, corsOptions: ICorsOptions) => {
         });
 
         socket.on('addHint', (roomId, hint) => {
-            addHint(hint, newUser, roomId);
-            io.to(roomId).emit('newHint', { word: hint, user: newUser });
-            console.log(`user ${newUser.username} sent a hint`);
+            const newHint = addHint(hint, newUser, roomId);
+
+            if (newHint) {
+                io.to(roomId).emit('newHint', { word: hint, user: newUser });
+                console.log(`user ${newUser.username} sent a hint`);
+            }
         });
     });
 };

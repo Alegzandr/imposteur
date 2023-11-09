@@ -363,7 +363,7 @@ function Room() {
                             room?.gameState?.currentPlayer?.id === player?.id
                                 ? 'outline'
                                 : ''
-                        } rounded-xl bg-zinc-800 p-8 w-full flex gap-4 justify-between px-4 lg:flex-col lg:w-1/4`}
+                        } rounded-xl bg-zinc-800 p-8 w-full flex gap-4 justify-between px-4 lg:flex-col lg:w-1/4 lg:justify-start`}
                         key={`player-${index + 1}`}
                     >
                         <h2 className="text-2xl font-bold mb-4 mt-4 text-center lg:mt-0">

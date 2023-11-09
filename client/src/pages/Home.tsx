@@ -15,11 +15,12 @@ function Home() {
     const handleLogin = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        if (username.length < 3 || username.length > 16) {
+        const newUsername = username.trim();
+        if (newUsername.length < 3 || newUsername.length > 16) {
             return;
         }
 
-        signIn(username);
+        signIn(newUsername);
     };
 
     const handleCreate = async (e: FormEvent<HTMLFormElement>) => {
@@ -107,7 +108,7 @@ function Home() {
                                 value={username}
                                 onChange={(e) =>
                                     setUsername(
-                                        capitalize(e.target.value.trim())
+                                        capitalize(e.target.value.trimStart())
                                     )
                                 }
                                 min={3}

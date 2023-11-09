@@ -111,7 +111,7 @@ export const setUserReady = (user: IUser, roomId: string) => {
         room.users.length < 2 ||
         room.gameState.readyUsers?.find((u) => u.id === user.id)
     ) {
-        return;
+        return false;
     }
 
     if (room.gameState.readyUsers) {
@@ -212,10 +212,10 @@ export const addHint = (word: string, user: IUser, roomId: string) => {
 
     if (
         !room?.gameState.phase.startsWith('round-') ||
-        room.gameState.currentPlayer !== user ||
+        room?.gameState?.currentPlayer?.id !== user.id ||
         (userHints && userHints.length >= 2)
     ) {
-        return;
+        return false;
     }
 
     if (room.gameState.hints) {
@@ -226,6 +226,8 @@ export const addHint = (word: string, user: IUser, roomId: string) => {
 
     const nextPlayer = getNextPlayer(room);
     room.gameState.currentPlayer = nextPlayer;
+
+    return true;
 };
 
 export const getCurrentPlayer = (req: Request, res: Response) => {
