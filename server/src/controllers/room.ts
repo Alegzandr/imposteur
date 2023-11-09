@@ -38,10 +38,10 @@ const deleteWordsAndImpostor = (room: IRoom) => {
     return newRoom;
 };
 
-export const addRoom = async (_req: Request, res: Response) => {
+export const addRoom = async (req: Request, res: Response) => {
     const newRoom: IRoom = {
         id: v4(),
-        users: [],
+        users: [req.body.user],
         gameState: {
             phase: 'lobby',
             readyUsers: [],

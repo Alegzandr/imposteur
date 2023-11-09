@@ -6,7 +6,7 @@ import Loader from '../components/Loader';
 import IRoom from '../interfaces/Room';
 
 function Home() {
-    const { isAuth, isLoading, user, signIn } = useAuth();
+    const { isAuth, isLoading, user, signIn, socket } = useAuth();
     const navigate = useNavigate();
     const [username, setUsername] = useState<string>('');
     const [rooms, setRooms] = useState<IRoom[]>([]);
@@ -44,7 +44,7 @@ function Home() {
                 throw new Error(data.message);
             }
 
-            console.log(data);
+            socket?.emit('roomCreated', data.room);
             navigate(`/room/${data.room.id}`);
         } catch (error: any) {
             console.error(error);
@@ -68,6 +68,18 @@ function Home() {
             console.error(error);
         }
     };
+
+    useEffect(() => {
+        const handleRoomCreated = (newRoom: IRoom) => {
+            setRooms((prevRooms) => [...prevRooms, newRoom]);
+        };
+
+        socket?.on('roomCreated', handleRoomCreated);
+
+        return () => {
+            socket?.off('roomCreated', handleRoomCreated);
+        };
+    }, [socket]);
 
     useEffect(() => {
         fetchRooms();

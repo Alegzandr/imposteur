@@ -15,6 +15,7 @@ export const handleSocket = (server: any, corsOptions: ICorsOptions) => {
             username: socket.handshake.query.username as string,
         };
         addUser(newUser);
+        socket.join('home');
         console.log('a user connected');
 
         socket.on('disconnect', () => {
@@ -23,7 +24,13 @@ export const handleSocket = (server: any, corsOptions: ICorsOptions) => {
             console.log('user disconnected');
         });
 
+        socket.on('roomCreated', (room) => {
+            io.to('home').emit('roomCreated', room);
+            console.log(`user ${newUser.username} created room ${room.id}`);
+        });
+
         socket.on('join', (roomId) => {
+            socket.leave('home');
             joinRoom(roomId, newUser);
             socket.join(roomId);
             io.to(roomId).emit('userJoined', newUser);
