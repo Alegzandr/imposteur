@@ -51,6 +51,7 @@ export const handleSocket = (server: any, corsOptions: ICorsOptions) => {
         socket.on('notReady', (roomId) => {
             setUserNotReady(newUser, roomId);
             io.to(roomId).emit('notReady', newUser);
+            console.log(`user ${newUser.username} is not ready`);
         });
     });
 };
