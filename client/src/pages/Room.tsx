@@ -15,6 +15,7 @@ function Room() {
     const [currentWord, setCurrentWord] = useState('');
     const [currentHint, setCurrentHint] = useState('');
     const [hasVoted, setHasVoted] = useState(false);
+    const [currentVote, setCurrentVote] = useState<IUser | null>(null);
     const { socket, isAuth, user } = useAuth();
 
     const fetchRoom = async () => {
@@ -147,6 +148,17 @@ function Room() {
 
         socket?.emit('addHint', id, currentHint.trim());
         setCurrentHint('');
+    };
+
+    const handleAddVote = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        if (!currentVote) {
+            return;
+        }
+
+        socket?.emit('addVote', id, currentVote);
+        setHasVoted(true);
     };
 
     useEffect(() => {
@@ -424,7 +436,7 @@ function Room() {
 
             <form
                 className="w-full flex flex-col items-center gap-4 mt-4"
-                onSubmit={handleAddHint}
+                onSubmit={handleAddVote}
             >
                 <button
                     className="w-full border focus:outline-none font-medium rounded-lg text-sm px-5 py-4 bg-zinc-800 text-white border-zinc-600 hover:bg-zinc-700 hover:border-zinc-600 focus:ring-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
@@ -442,7 +454,10 @@ function Room() {
                             <input
                                 id={`player-${playerIndex + 1}`}
                                 type="radio"
-                                value={player.id}
+                                value={player.username}
+                                onChange={() => {
+                                    setCurrentVote(player);
+                                }}
                                 name="player"
                                 className="w-4 h-4 focus:ring-blue-600 ring-offset-zinc-800 focus:ring-2 bg-zinc-700 border-zinc-600"
                                 required
