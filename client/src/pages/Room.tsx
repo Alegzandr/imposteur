@@ -341,7 +341,6 @@ function Room() {
                             phase: `vote-${prevRoom.gameState.phase.substring(
                                 6
                             )}`,
-                            hints: [],
                             currentPlayer: undefined,
                         },
                     };
@@ -382,22 +381,25 @@ function Room() {
 
     useEffect(() => {
         const handleAllVoted = () => {
-            setRoom((prevRoom) => {
-                if (prevRoom) {
-                    fetchCurrentScores();
-                    return {
-                        ...prevRoom,
-                        gameState: {
-                            ...prevRoom.gameState,
-                            phase: `scoreboard-${prevRoom.gameState.phase.substring(
-                                5
-                            )}`,
-                            votes: [],
-                        },
-                    };
-                }
-                return prevRoom;
-            });
+            setTimeout(() => {
+                setRoom((prevRoom) => {
+                    if (prevRoom) {
+                        fetchCurrentScores();
+                        return {
+                            ...prevRoom,
+                            gameState: {
+                                ...prevRoom.gameState,
+                                phase: `scoreboard-${prevRoom.gameState.phase.substring(
+                                    5
+                                )}`,
+                                votes: [],
+                                hints: [],
+                            },
+                        };
+                    }
+                    return prevRoom;
+                });
+            }, 5000);
 
             if (room?.gameState.phase !== 'scoreboard-13') {
                 const interval = setInterval(() => {
@@ -410,11 +412,13 @@ function Room() {
                 }, 10000);
 
                 setTimeout(() => {
+                    setCurrentWord('');
                     setInnoncentsWord('');
                     setImpostorWord('');
                     setImpostor('');
 
                     setRoom((prevRoom) => {
+                        fetchCurrentWord();
                         if (prevRoom) {
                             return {
                                 ...prevRoom,
@@ -600,7 +604,16 @@ function Room() {
                                 htmlFor={`player-${playerIndex + 1}`}
                                 className="w-full py-4 ml-2 text-lg font-medium text-zinc-300 flex justify-between items-center lg:flex-col"
                             >
-                                <span>{player.username}</span>
+                                <span className="font-bold">
+                                    {player.username}
+                                </span>
+                                {room?.gameState?.hints
+                                    ?.filter((h) => h.user.id === player.id)
+                                    .map((word) => (
+                                        <p className="text-sm">
+                                            {capitalize(word.word)}
+                                        </p>
+                                    ))}
 
                                 <div className="flex flex-wrap gap-1 ml-2 lg:my-4">
                                     {room.gameState.votes &&
@@ -637,11 +650,22 @@ function Room() {
 
             <div className="flex w-full justify-between gap-4">
                 <div className="rounded-xl bg-zinc-800 p-8 w-full mt-4 text-zinc-400 text-lg">
-                    <p>Le mot était : {capitalize(innoncentsWord)}</p>
                     <p>
-                        Le mot de l'imposteur était : {capitalize(impostorWord)}
+                        Le mot était :{' '}
+                        <span className="font-bold">
+                            {capitalize(innoncentsWord)}
+                        </span>
                     </p>
-                    <p>L'imposteur était : {impostor}</p>
+                    <p>
+                        Le mot de l'imposteur était :{' '}
+                        <span className="font-bold">
+                            {capitalize(impostorWord)}
+                        </span>
+                    </p>
+                    <p>
+                        L'imposteur était :{' '}
+                        <span className="font-bold">{impostor}</span>
+                    </p>
                 </div>
                 <div className="rounded-xl bg-zinc-800 p-8 w-1/6 mt-4 text-zinc-400 text-2xl items-center justify-center">
                     <p>{countdown}s</p>

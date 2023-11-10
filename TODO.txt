@@ -1,5 +1,2 @@
-Reroll le mot
-Cooldown dernier mot/vote
-Afficher liste des mots pendants les votes
 Afficher message d'erreur si mot répété etc
 Dockeriser
