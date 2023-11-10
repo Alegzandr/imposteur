@@ -277,6 +277,32 @@ function Room() {
     }, [socket]);
 
     useEffect(() => {
+        const handleEndOfRound = () => {
+            setRoom((prevRoom) => {
+                if (prevRoom) {
+                    return {
+                        ...prevRoom,
+                        gameState: {
+                            ...prevRoom.gameState,
+                            phase: `vote-${prevRoom.gameState.phase.substring(
+                                6
+                            )}`,
+                            hints: [],
+                        },
+                    };
+                }
+                return prevRoom;
+            });
+        };
+
+        socket?.on('endOfRound', handleEndOfRound);
+
+        return () => {
+            socket?.off('endOfRound', handleEndOfRound);
+        };
+    }, [socket]);
+
+    useEffect(() => {
         fetchRoom();
         socket?.emit('join', id);
     }, []);
@@ -393,38 +419,56 @@ function Room() {
                 Votes
             </h2>
             <h3 className="text-sm text-center mb-2 mt-4">
-                Tour {room.gameState.phase.substring(6)}/13
+                Tour {room.gameState.phase.substring(5)}/13
             </h3>
 
             <form
-                className="w-full flex items-center gap-4 mt-4"
+                className="w-full flex flex-col items-center gap-4 mt-4"
                 onSubmit={handleAddHint}
             >
                 <button
-                    className="border focus:outline-none font-medium rounded-lg text-sm px-5 py-4 bg-zinc-800 text-white border-zinc-600 hover:bg-zinc-700 hover:border-zinc-600 focus:ring-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="w-full border focus:outline-none font-medium rounded-lg text-sm px-5 py-4 bg-zinc-800 text-white border-zinc-600 hover:bg-zinc-700 hover:border-zinc-600 focus:ring-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     disabled={hasVoted}
                 >
                     Valider
                 </button>
 
-                <div className="flex flex-col gap-4 mt-4 lg:flex-row lg:flex-wrap">
-                    {room?.users.map((player, index) => (
+                <div className="w-full flex flex-col gap-4 lg:flex-row lg:flex-wrap">
+                    {room?.users.map((player, playerIndex) => (
                         <div
-                            className="flex items-center pl-4 border rounded border-gray-700"
-                            key={`player-${index + 1}`}
+                            className="lg:w-1/4 flex items-center px-4 border rounded border-zinc-700"
+                            key={`player-${playerIndex + 1}`}
                         >
                             <input
-                                id={`player-${index + 1}`}
+                                id={`player-${playerIndex + 1}`}
                                 type="radio"
                                 value={player.id}
                                 name="player"
-                                className="w-4 h-4 focus:ring-blue-600 ring-offset-gray-800 focus:ring-2 bg-gray-700 border-gray-600"
+                                className="w-4 h-4 focus:ring-blue-600 ring-offset-zinc-800 focus:ring-2 bg-zinc-700 border-zinc-600"
+                                required
                             />
                             <label
-                                htmlFor={`player-${index + 1}`}
-                                className="w-full py-4 ml-2 text-sm font-medium text-gray-300"
+                                htmlFor={`player-${playerIndex + 1}`}
+                                className="w-full py-4 ml-2 text-lg font-medium text-zinc-300 flex justify-between items-center lg:flex-col"
                             >
-                                {player.username}
+                                <span>{player.username}</span>
+
+                                <div className="flex flex-wrap gap-1 ml-2 lg:my-4">
+                                    {room.gameState.votes &&
+                                        room.gameState.votes
+                                            .filter(
+                                                (item) =>
+                                                    item.vote.id === player.id
+                                            )
+                                            .map((vote, voteIndex) => (
+                                                <span
+                                                    className="text-xs py-1 px-2 mr-2 rounded-3xl bg-zinc-700 text-red-400 border text-center"
+                                                    key={`vote-${playerIndex}-${voteIndex}`}
+                                                >
+                                                    {vote.user.username}
+                                                </span>
+                                            ))}
+                                </div>
                             </label>
                         </div>
                     ))}

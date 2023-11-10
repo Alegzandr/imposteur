@@ -211,8 +211,10 @@ const setNextPhase = (room: IRoom) => {
     if (currentPhase[0] === 'scoreboard' && currentPhase[1] === '13') {
         return false;
     } else if (currentPhase[0] === 'vote') {
+        room.gameState.votes = [];
         nextPhase = `scoreboard-${currentPhase[1]}`;
     } else if (currentPhase[0] === 'round') {
+        room.gameState.hints = [];
         nextPhase = `vote-${currentPhase[1]}`;
     } else {
         nextPhase = `round-${parseInt(currentPhase[1]) + 1}`;

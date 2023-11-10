@@ -7,6 +7,7 @@ interface gameState {
     impostor?: IUser;
     currentPlayer?: IUser;
     hints?: { word: string; user: IUser }[];
+    votes?: { vote: IUser; user: IUser }[];
 }
 
 export default gameState;
