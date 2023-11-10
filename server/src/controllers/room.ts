@@ -6,7 +6,6 @@ import fs from 'fs';
 import IRoom from '../interfaces/room';
 import IUser from '../interfaces/user';
 import IWord from '../interfaces/word';
-import IVote from '../interfaces/vote';
 
 const rooms: IRoom[] = [];
 
@@ -60,6 +59,7 @@ export const addRoom = async (req: Request, res: Response) => {
             phase: 'lobby',
             readyUsers: [],
             words,
+            scores: [{ score: 0, user: req.body.user }],
         },
     };
 
@@ -160,6 +160,7 @@ export const joinRoom = (roomId: string, user: IUser) => {
         !room.users.find((u) => u.id === user.id)
     ) {
         room.users.push(user);
+        room.gameState.scores.push({ score: 0, user });
     }
 };
 
@@ -281,6 +282,52 @@ export const getCurrentPlayer = (req: Request, res: Response) => {
 
 export let allVoted = false;
 
+const setScores = (room: IRoom) => {
+    room.users.forEach((user) => {
+        const isImpostor = user.id === room.gameState.impostor?.id;
+        const ownScore = room.gameState.scores?.find(
+            (s) => s.user.id === user.id
+        );
+
+        if (isImpostor) {
+            const foundNotByAll =
+                room.gameState.votes?.filter(
+                    (v) => v.vote.id === room.gameState.impostor?.id
+                ).length !== room.users.length;
+            const notFound =
+                room.gameState.votes?.filter(
+                    (v) => v.vote.id === room.gameState.impostor?.id
+                ).length === 0;
+
+            if (foundNotByAll && ownScore) {
+                ownScore.score += 100;
+            } else if (notFound && ownScore) {
+                ownScore.score += 200;
+            }
+        } else {
+            const ownVote = room.gameState.votes?.find(
+                (v) => v.user.id === user.id
+            );
+            const votedForImpostor =
+                ownVote?.vote.id === room.gameState.impostor?.id;
+            const onlyOneToVoteForImpostor =
+                room.gameState.votes?.filter(
+                    (v) => v.vote.id === room.gameState.impostor?.id
+                ).length === 1;
+
+            if (votedForImpostor && onlyOneToVoteForImpostor && ownScore) {
+                ownScore.score += 150;
+            } else if (votedForImpostor && ownScore) {
+                ownScore.score += 100;
+            }
+        }
+    });
+
+    room.gameState.previousImpostor = room.gameState.impostor;
+    const newImpostorIndex = Math.floor(Math.random() * room.users.length);
+    room.gameState.impostor = room.users[newImpostorIndex];
+};
+
 export const addVote = (votee: IUser, user: IUser, roomId: string) => {
     const room = rooms.find((r) => r.id === roomId);
     const vote = room?.users.find((u) => u.id === votee.id);
@@ -305,6 +352,24 @@ export const addVote = (votee: IUser, user: IUser, roomId: string) => {
     }
 
     if (allVoted) {
+        setScores(room);
         setNextPhase(room);
+    }
+};
+
+export const getCurrentScores = (req: Request, res: Response) => {
+    const room = rooms.find((r) => r.id === req.params.id);
+
+    if (room && room.gameState.phase.startsWith('scoreboard-')) {
+        const phaseIndex = parseInt(room.gameState.phase.split('-')[1]) - 1;
+
+        res.status(200).json({
+            scores: room.gameState.scores,
+            innoncentsWord: room?.gameState?.words?.[phaseIndex].word,
+            impostorsWord: room?.gameState?.words?.[phaseIndex].antonym,
+            impostor: room.gameState.previousImpostor,
+        });
+    } else {
+        res.status(404).json({ message: 'Phase is not scoreboard' });
     }
 };
