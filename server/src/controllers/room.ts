@@ -259,7 +259,9 @@ export const addHint = (word: string, user: IUser, roomId: string) => {
     const nextPlayer = getNextPlayer(room);
     room.gameState.currentPlayer = nextPlayer;
 
-    setNextPhase(room);
+    if (endOfRound) {
+        setNextPhase(room);
+    }
 
     return true;
 };

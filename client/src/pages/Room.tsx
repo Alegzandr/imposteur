@@ -14,6 +14,7 @@ function Room() {
     const [isReady, setIsReady] = useState(false);
     const [currentWord, setCurrentWord] = useState('');
     const [currentHint, setCurrentHint] = useState('');
+    const [hasVoted, setHasVoted] = useState(false);
     const { socket, isAuth, user } = useAuth();
 
     const fetchRoom = async () => {
@@ -385,6 +386,50 @@ function Room() {
                     </div>
                 ))}
             </div>
+        </>
+    ) : room && room.gameState && room.gameState.phase.startsWith('vote-') ? (
+        <>
+            <h2 className="text-5xl lg:text-6xl font-bold mt-4 text-center select-none">
+                Votes
+            </h2>
+            <h3 className="text-sm text-center mb-2 mt-4">
+                Tour {room.gameState.phase.substring(6)}/13
+            </h3>
+
+            <form
+                className="w-full flex items-center gap-4 mt-4"
+                onSubmit={handleAddHint}
+            >
+                <button
+                    className="border focus:outline-none font-medium rounded-lg text-sm px-5 py-4 bg-zinc-800 text-white border-zinc-600 hover:bg-zinc-700 hover:border-zinc-600 focus:ring-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    disabled={hasVoted}
+                >
+                    Valider
+                </button>
+
+                <div className="flex flex-col gap-4 mt-4 lg:flex-row lg:flex-wrap">
+                    {room?.users.map((player, index) => (
+                        <div
+                            className="flex items-center pl-4 border rounded border-gray-700"
+                            key={`player-${index + 1}`}
+                        >
+                            <input
+                                id={`player-${index + 1}`}
+                                type="radio"
+                                value={player.id}
+                                name="player"
+                                className="w-4 h-4 focus:ring-blue-600 ring-offset-gray-800 focus:ring-2 bg-gray-700 border-gray-600"
+                            />
+                            <label
+                                htmlFor={`player-${index + 1}`}
+                                className="w-full py-4 ml-2 text-sm font-medium text-gray-300"
+                            >
+                                {player.username}
+                            </label>
+                        </div>
+                    ))}
+                </div>
+            </form>
         </>
     ) : (
         <></>
