@@ -433,6 +433,7 @@ function Room() {
 
                     setRoom((prevRoom) => {
                         fetchCurrentWord();
+                        fetchCurrentPlayer();
                         if (prevRoom) {
                             return {
                                 ...prevRoom,
