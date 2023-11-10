@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
 import Ready from '../components/Ready';
 import NotReady from '../components/NotReady';
 import IRoom from '../interfaces/Room';
@@ -21,6 +22,7 @@ function Room() {
     const [innoncentsWord, setInnoncentsWord] = useState<string>('');
     const [impostorWord, setImpostorWord] = useState<string>('');
     const [impostor, setImpostor] = useState<string>('');
+    const [isWordHidden, setIsWordHidden] = useState<boolean>(false);
     const { socket, isAuth, user } = useAuth();
 
     const fetchRoom = async () => {
@@ -511,7 +513,29 @@ function Room() {
     ) : room && room.gameState && room.gameState.phase.startsWith('round-') ? (
         <>
             <h2 className="text-5xl lg:text-6xl font-bold mt-4 text-center select-none">
-                {currentWord ? currentWord : 'Chargement...'}
+                {currentWord ? (
+                    <div className="flex items-center justify-center gap-2">
+                        <span
+                            className={`${
+                                isWordHidden ? 'opacity-0' : 'opacity-100'
+                            }`}
+                        >
+                            {currentWord}
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() => setIsWordHidden(!isWordHidden)}
+                        >
+                            {!isWordHidden ? (
+                                <AiFillEyeInvisible />
+                            ) : (
+                                <AiFillEye />
+                            )}
+                        </button>
+                    </div>
+                ) : (
+                    <span>Chargement...</span>
+                )}
             </h2>
             <h3 className="text-sm text-center mb-2 mt-4">
                 Tour {room.gameState.phase.substring(6)}/13
