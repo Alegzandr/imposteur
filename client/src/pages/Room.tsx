@@ -13,6 +13,7 @@ function Room() {
     const [room, setRoom] = useState<IRoom | null>(null);
     const [isReady, setIsReady] = useState(false);
     const [currentWord, setCurrentWord] = useState('');
+    const [error, setError] = useState('');
     const [currentHint, setCurrentHint] = useState('');
     const [hasVoted, setHasVoted] = useState(false);
     const [currentVote, setCurrentVote] = useState<IUser | null>(null);
@@ -140,13 +141,26 @@ function Room() {
     const handleAddHint = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
+        setError('');
+
+        if (currentHint === currentWord) {
+            setError("L'indice ne peut pas être le mot à trouver.");
+            return;
+        }
+
+        if (!currentHint.replace(/<[^>]*>?/gm, '').trim()) {
+            setError("L'indice ne peut pas être vide.");
+            return;
+        }
+
         if (
-            currentHint === currentWord ||
-            !currentHint.replace(/<[^>]*>?/gm, '').trim() ||
             room?.gameState?.hints?.some(
                 (h) => h.word.toLowerCase() === currentHint.toLowerCase()
             )
         ) {
+            setError(
+                "L'indice ne peut pas être le même qu'un indice déjà donné."
+            );
             return;
         }
 
@@ -530,6 +544,7 @@ function Room() {
                     Valider
                 </button>
             </form>
+            <p className="text-red-400 text-sm text-center mt-2">{error}</p>
 
             <div className="flex flex-col gap-4 mt-4 lg:flex-row lg:flex-wrap">
                 {room?.users.map((player, index) => (
