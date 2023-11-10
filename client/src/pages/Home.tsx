@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { PiUserCircleDuotone } from 'react-icons/pi';
+import { AiOutlineReload } from 'react-icons/ai';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/Auth';
 import Loader from '../components/Loader';
@@ -157,9 +158,22 @@ function Home() {
             </div>
 
             <div className="rounded-xl bg-zinc-800 p-8 w-full text-center flex items-center flex-col mt-4">
-                <h2 className="text-2xl font-bold mb-4 self-start">
-                    Liste des parties
-                </h2>
+                <div className="w-full flex justify-between items-start">
+                    <h2 className="text-2xl font-bold mb-4">
+                        Liste des parties
+                    </h2>
+                    {isAuth ? (
+                        <button
+                            className="border focus:outline-none font-medium rounded-lg text-sm p-2 h-full bg-zinc-800 text-white border-zinc-600 hover:bg-zinc-700 hover:border-zinc-600 focus:ring-zinc-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            type="button"
+                            onClick={() => fetchRooms()}
+                        >
+                            <AiOutlineReload />
+                        </button>
+                    ) : (
+                        <></>
+                    )}
+                </div>
 
                 {!isAuth ? (
                     <p className="text-zinc-400 mb-2">
