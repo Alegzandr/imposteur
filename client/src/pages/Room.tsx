@@ -315,6 +315,32 @@ function Room() {
     }, [socket]);
 
     useEffect(() => {
+        const handleAllVoted = () => {
+            setRoom((prevRoom) => {
+                if (prevRoom) {
+                    return {
+                        ...prevRoom,
+                        gameState: {
+                            ...prevRoom.gameState,
+                            phase: `scoreboard-${prevRoom.gameState.phase.substring(
+                                5
+                            )}`,
+                            votes: [],
+                        },
+                    };
+                }
+                return prevRoom;
+            });
+        };
+
+        socket?.on('allVoted', handleAllVoted);
+
+        return () => {
+            socket?.off('allVoted', handleAllVoted);
+        };
+    }, [socket]);
+
+    useEffect(() => {
         fetchRoom();
         socket?.emit('join', id);
     }, []);
