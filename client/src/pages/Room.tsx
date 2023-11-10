@@ -378,7 +378,7 @@ function Room() {
                                 ?.filter((h) => h.user.id === player?.id)
                                 .map((hint, index) => (
                                     <li key={`hint-${index + 1}`}>
-                                        {hint.word}
+                                        {capitalize(hint.word)}
                                     </li>
                                 ))}
                         </ul>

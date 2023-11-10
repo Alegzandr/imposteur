@@ -204,8 +204,39 @@ const getNextPlayer = (room: IRoom) => {
     return room.users[nextPlayerIndex];
 };
 
+const setNextPhase = (room: IRoom) => {
+    const currentPhase = room.gameState.phase.split('-');
+    let nextPhase;
+
+    if (currentPhase[0] === 'scoreboard' && currentPhase[1] === '13') {
+        return false;
+    } else if (currentPhase[0] === 'vote') {
+        nextPhase = `scoreboard-${currentPhase[1]}`;
+    } else if (currentPhase[0] === 'round') {
+        nextPhase = `vote-${currentPhase[1]}`;
+    } else {
+        nextPhase = `round-${parseInt(currentPhase[1]) + 1}`;
+    }
+
+    room.gameState.phase = nextPhase;
+    return true;
+};
+
+export let endOfRound = false;
+export let endOfGame = false;
+
 export const addHint = (word: string, user: IUser, roomId: string) => {
+    endOfRound = false;
     const room = rooms.find((r) => r.id === roomId);
+
+    if (
+        room &&
+        room.gameState.hints &&
+        room.gameState.hints.length === 2 * room.users.length - 1
+    ) {
+        endOfRound = true;
+    }
+
     const userHints = room?.gameState.hints?.filter(
         (h) => h.user.id === user.id
     );
@@ -213,7 +244,8 @@ export const addHint = (word: string, user: IUser, roomId: string) => {
     if (
         !room?.gameState.phase.startsWith('round-') ||
         room?.gameState?.currentPlayer?.id !== user.id ||
-        (userHints && userHints.length >= 2)
+        (userHints && userHints.length >= 2) ||
+        room?.gameState.hints?.find((h) => h.word === word)
     ) {
         return false;
     }
@@ -227,6 +259,8 @@ export const addHint = (word: string, user: IUser, roomId: string) => {
     const nextPlayer = getNextPlayer(room);
     room.gameState.currentPlayer = nextPlayer;
 
+    setNextPhase(room);
+
     return true;
 };
 
@@ -237,5 +271,33 @@ export const getCurrentPlayer = (req: Request, res: Response) => {
         res.status(200).json({ currentPlayer: room.gameState.currentPlayer });
     } else {
         res.status(404).json({ message: 'Phase is not round' });
+    }
+};
+
+export let allVoted = false;
+
+export const addVote = (vote: string, user: IUser, roomId: string) => {
+    const room = rooms.find((r) => r.id === roomId);
+    const votee = room?.users.find((u) => u.id === vote);
+
+    if (
+        !room ||
+        !room.gameState.phase.startsWith('vote-') ||
+        room.gameState.votes?.find((v) => v.user.id === user.id) ||
+        !votee
+    ) {
+        return false;
+    }
+
+    if (room.gameState.votes) {
+        room.gameState.votes.push({ vote: votee, user });
+    } else {
+        room.gameState.votes = [{ vote: votee, user }];
+    }
+
+    allVoted = room.gameState.votes.length === room.users.length - 1;
+
+    if (allVoted) {
+        setNextPhase(room);
     }
 };

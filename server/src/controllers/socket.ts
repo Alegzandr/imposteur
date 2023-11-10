@@ -8,6 +8,9 @@ import {
     setUserNotReady,
     joinRoom,
     addHint,
+    endOfRound,
+    addVote,
+    allVoted,
 } from './room';
 
 export const handleSocket = (server: any, corsOptions: ICorsOptions) => {
@@ -61,11 +64,30 @@ export const handleSocket = (server: any, corsOptions: ICorsOptions) => {
         });
 
         socket.on('addHint', (roomId, hint) => {
-            const newHint = addHint(hint, newUser, roomId);
+            const newHint = addHint(hint.toLowerCase(), newUser, roomId);
 
             if (newHint) {
                 io.to(roomId).emit('newHint', { word: hint, user: newUser });
                 console.log(`user ${newUser.username} sent a hint`);
+            }
+
+            if (endOfRound) {
+                io.to(roomId).emit('endOfRound');
+                console.log(`end of round in room ${roomId}`);
+            }
+        });
+
+        socket.on('addVote', (roomId, vote) => {
+            const newVote = addVote(vote, newUser, roomId);
+
+            if (newVote) {
+                io.to(roomId).emit('newVote', { vote, user: newUser });
+                console.log(`user ${newUser.username} voted`);
+            }
+
+            if (allVoted) {
+                io.to(roomId).emit('allVoted');
+                console.log(`all voted in room ${roomId}`);
             }
         });
     });
