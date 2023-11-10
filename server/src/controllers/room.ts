@@ -181,7 +181,7 @@ export const getCurrentWord = (req: Request, res: Response) => {
     }
 
     const user = room?.users.find((u) => u.id === req.body.user.id);
-    const roundIndex = parseInt(room?.gameState.phase.substring(6) || '') - 1;
+    const roundIndex = parseInt(room?.gameState.phase.split('-')[1] || '1') - 1;
 
     if (user && room && !isImpostor(user, room)) {
         res.status(200).json({
@@ -373,7 +373,7 @@ export const getCurrentScores = (req: Request, res: Response) => {
         res.status(200).json({
             scores: room.gameState.scores,
             innoncentsWord: room?.gameState?.words?.[phaseIndex].word,
-            impostorsWord: room?.gameState?.words?.[phaseIndex].antonym,
+            impostorWord: room?.gameState?.words?.[phaseIndex].antonym,
             impostor: room.gameState.previousImpostor,
         });
     } else {

@@ -637,8 +637,10 @@ function Room() {
 
             <div className="flex w-full justify-between gap-4">
                 <div className="rounded-xl bg-zinc-800 p-8 w-full mt-4 text-zinc-400 text-lg">
-                    <p>Le mot était : {innoncentsWord}</p>
-                    <p>Le mot de l'imposteur était : {impostorWord}</p>
+                    <p>Le mot était : {capitalize(innoncentsWord)}</p>
+                    <p>
+                        Le mot de l'imposteur était : {capitalize(impostorWord)}
+                    </p>
                     <p>L'imposteur était : {impostor}</p>
                 </div>
                 <div className="rounded-xl bg-zinc-800 p-8 w-1/6 mt-4 text-zinc-400 text-2xl items-center justify-center">
