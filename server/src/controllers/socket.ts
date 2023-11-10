@@ -77,11 +77,11 @@ export const handleSocket = (server: any, corsOptions: ICorsOptions) => {
             }
         });
 
-        socket.on('addVote', (roomId, vote) => {
-            const newVote = addVote(vote, newUser, roomId);
+        socket.on('addVote', (roomId, votee) => {
+            const newVote = addVote(votee, newUser, roomId);
 
             if (newVote) {
-                io.to(roomId).emit('newVote', { vote, user: newUser });
+                io.to(roomId).emit('newVote', { vote: votee, user: newUser });
                 console.log(`user ${newUser.username} voted`);
             }
 

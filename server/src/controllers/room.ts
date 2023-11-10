@@ -6,6 +6,7 @@ import fs from 'fs';
 import IRoom from '../interfaces/room';
 import IUser from '../interfaces/user';
 import IWord from '../interfaces/word';
+import IVote from '../interfaces/vote';
 
 const rooms: IRoom[] = [];
 
@@ -280,26 +281,28 @@ export const getCurrentPlayer = (req: Request, res: Response) => {
 
 export let allVoted = false;
 
-export const addVote = (vote: string, user: IUser, roomId: string) => {
+export const addVote = (votee: IUser, user: IUser, roomId: string) => {
     const room = rooms.find((r) => r.id === roomId);
-    const votee = room?.users.find((u) => u.id === vote);
+    const vote = room?.users.find((u) => u.id === votee.id);
 
     if (
         !room ||
         !room.gameState.phase.startsWith('vote-') ||
-        room.gameState.votes?.find((v) => v.user.id === user.id) ||
-        !votee
+        room.gameState.votes?.find((v) => v.user.id === user?.id) ||
+        !vote
     ) {
         return false;
     }
 
-    if (room.gameState.votes) {
-        room.gameState.votes.push({ vote: votee, user });
-    } else {
-        room.gameState.votes = [{ vote: votee, user }];
+    if (room.gameState.votes && user) {
+        room.gameState.votes.push({ vote: vote, user });
+    } else if (user) {
+        room.gameState.votes = [{ vote: vote, user }];
     }
 
-    allVoted = room.gameState.votes.length === room.users.length - 1;
+    if (room.gameState.votes) {
+        allVoted = room.gameState.votes.length === room.users.length;
+    }
 
     if (allVoted) {
         setNextPhase(room);

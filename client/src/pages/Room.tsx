@@ -133,7 +133,7 @@ function Room() {
         }
     };
 
-    const handleAddHint = async (e: FormEvent<HTMLFormElement>) => {
+    const handleAddHint = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (
@@ -150,7 +150,7 @@ function Room() {
         setCurrentHint('');
     };
 
-    const handleAddVote = async (e: FormEvent<HTMLFormElement>) => {
+    const handleAddVote = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (!currentVote) {
@@ -300,6 +300,7 @@ function Room() {
                                 6
                             )}`,
                             hints: [],
+                            currentPlayer: undefined,
                         },
                     };
                 }
@@ -474,7 +475,11 @@ function Room() {
                 <div className="w-full flex flex-col gap-4 lg:flex-row lg:flex-wrap">
                     {room?.users.map((player, playerIndex) => (
                         <div
-                            className="lg:w-1/4 flex items-center px-4 border rounded border-zinc-700"
+                            className={`${
+                                hasVoted || player.id === user?.id
+                                    ? 'opacity-50 cursor-not-allowed'
+                                    : ''
+                            } lg:w-1/4 flex items-center px-4 border rounded border-zinc-700`}
                             key={`player-${playerIndex + 1}`}
                         >
                             <input
@@ -486,6 +491,7 @@ function Room() {
                                 }}
                                 name="player"
                                 className="w-4 h-4 focus:ring-blue-600 ring-offset-zinc-800 focus:ring-2 bg-zinc-700 border-zinc-600"
+                                disabled={hasVoted || player.id === user?.id}
                                 required
                             />
                             <label
