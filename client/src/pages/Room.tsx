@@ -16,6 +16,10 @@ function Room() {
     const [currentHint, setCurrentHint] = useState('');
     const [hasVoted, setHasVoted] = useState(false);
     const [currentVote, setCurrentVote] = useState<IUser | null>(null);
+    const [countdown, setCountdown] = useState(10);
+    const [innoncentsWord, setInnoncentsWord] = useState<string>('');
+    const [impostorWord, setImpostorWord] = useState<string>('');
+    const [impostor, setImpostor] = useState<string>('');
     const { socket, isAuth, user } = useAuth();
 
     const fetchRoom = async () => {
@@ -159,6 +163,44 @@ function Room() {
 
         socket?.emit('addVote', id, currentVote);
         setHasVoted(true);
+    };
+
+    const fetchCurrentScores = async () => {
+        try {
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/api/rooms/${id}/scores`,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message);
+            }
+
+            setInnoncentsWord(data.innoncentsWord);
+            setImpostorWord(data.impostorWord);
+            setImpostor(data.impostor.username);
+
+            setRoom((prevRoom) => {
+                if (prevRoom) {
+                    return {
+                        ...prevRoom,
+                        gameState: {
+                            ...prevRoom.gameState,
+                            scores: data.scores,
+                        },
+                    };
+                }
+                return prevRoom;
+            });
+        } catch (error: any) {
+            console.error(error);
+        }
     };
 
     useEffect(() => {
@@ -316,9 +358,33 @@ function Room() {
     }, [socket]);
 
     useEffect(() => {
+        const handleNewVote = (vote: { vote: IUser; user: IUser }) => {
+            setRoom((prevRoom) => {
+                if (prevRoom) {
+                    return {
+                        ...prevRoom,
+                        gameState: {
+                            ...prevRoom.gameState,
+                            votes: [...(prevRoom.gameState.votes || []), vote],
+                        },
+                    };
+                }
+                return prevRoom;
+            });
+        };
+
+        socket?.on('newVote', handleNewVote);
+
+        return () => {
+            socket?.off('newVote', handleNewVote);
+        };
+    }, [socket]);
+
+    useEffect(() => {
         const handleAllVoted = () => {
             setRoom((prevRoom) => {
                 if (prevRoom) {
+                    fetchCurrentScores();
                     return {
                         ...prevRoom,
                         gameState: {
@@ -332,6 +398,42 @@ function Room() {
                 }
                 return prevRoom;
             });
+
+            if (room?.gameState.phase !== 'scoreboard-13') {
+                const interval = setInterval(() => {
+                    setCountdown((prevCountdown) => prevCountdown - 1);
+                }, 1000);
+
+                setTimeout(() => {
+                    setCountdown(10);
+                    clearInterval(interval);
+                }, 10000);
+
+                setTimeout(() => {
+                    setInnoncentsWord('');
+                    setImpostorWord('');
+                    setImpostor('');
+
+                    setRoom((prevRoom) => {
+                        if (prevRoom) {
+                            return {
+                                ...prevRoom,
+                                gameState: {
+                                    ...prevRoom.gameState,
+                                    phase: `round-${
+                                        parseInt(
+                                            prevRoom.gameState.phase.substring(
+                                                11
+                                            )
+                                        ) + 1
+                                    }`,
+                                },
+                            };
+                        }
+                        return prevRoom;
+                    });
+                }, 10000);
+            }
         };
 
         socket?.on('allVoted', handleAllVoted);
@@ -469,7 +571,7 @@ function Room() {
                     className="w-full border focus:outline-none font-medium rounded-lg text-sm px-5 py-4 bg-zinc-800 text-white border-zinc-600 hover:bg-zinc-700 hover:border-zinc-600 focus:ring-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     disabled={hasVoted}
                 >
-                    Valider
+                    {!hasVoted ? 'Voter' : 'Vote enregistré'}
                 </button>
 
                 <div className="w-full flex flex-col gap-4 lg:flex-row lg:flex-wrap">
@@ -521,6 +623,51 @@ function Room() {
                     ))}
                 </div>
             </form>
+        </>
+    ) : room &&
+      room.gameState &&
+      room.gameState.phase.startsWith('scoreboard-') ? (
+        <>
+            <h2 className="text-5xl lg:text-6xl font-bold mt-4 text-center select-none">
+                Scores
+            </h2>
+            <h3 className="text-sm text-center mb-2 mt-4">
+                Tour {room.gameState.phase.substring(11)}/13
+            </h3>
+
+            <div className="flex w-full justify-between gap-4">
+                <div className="rounded-xl bg-zinc-800 p-8 w-full mt-4 text-zinc-400 text-lg">
+                    <p>Le mot était : {innoncentsWord}</p>
+                    <p>Le mot de l'imposteur était : {impostorWord}</p>
+                    <p>L'imposteur était : {impostor}</p>
+                </div>
+                <div className="rounded-xl bg-zinc-800 p-8 w-1/6 mt-4 text-zinc-400 text-2xl items-center justify-center">
+                    <p>{countdown}s</p>
+                </div>
+            </div>
+
+            <div className="flex flex-col gap-4 mt-4 lg:flex-row lg:flex-wrap">
+                {room?.gameState.scores.map((score, index) => (
+                    <div
+                        className={`${
+                            room?.gameState.scores.reduce((max, current) => {
+                                return current.score > max
+                                    ? current.score
+                                    : max;
+                            }, 0) === score.score
+                                ? 'outline'
+                                : ''
+                        } rounded-xl bg-zinc-800 p-8 w-full flex gap-4 justify-between px-4 lg:flex-col lg:w-1/4 lg:justify-start`}
+                        key={`player-${index + 1}`}
+                    >
+                        <h2 className="text-2xl font-bold mb-4 mt-4 text-center lg:mt-0">
+                            {score.user.username}
+                        </h2>
+
+                        <p className="text-xl">{score.score}</p>
+                    </div>
+                ))}
+            </div>
         </>
     ) : (
         <></>

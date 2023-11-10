@@ -354,7 +354,14 @@ export const addVote = (votee: IUser, user: IUser, roomId: string) => {
     if (allVoted) {
         setScores(room);
         setNextPhase(room);
+
+        setTimeout(() => {
+            allVoted = false;
+            setNextPhase(room);
+        }, 10000);
     }
+
+    return true;
 };
 
 export const getCurrentScores = (req: Request, res: Response) => {
