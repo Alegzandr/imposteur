@@ -4,6 +4,7 @@ import IUser from './User';
 interface IAuthContext {
     isAuth: boolean;
     isLoading: boolean;
+    error: string;
     user: IUser | null;
     signIn: (username: string) => void;
     socket: Socket | null;

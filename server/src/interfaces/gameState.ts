@@ -4,16 +4,24 @@ import IUser from './user';
 import IVote from './vote';
 import IWord from './word';
 
-interface gameState {
+interface IRevealed {
+    word: string;
+    impostorWord: string;
+    impostor: IUser;
+}
+
+interface IGameState {
     phase: string;
     readyUsers: IUser[];
     words?: IWord[];
-    previousImpostor?: IUser;
     impostor?: IUser;
     currentPlayer?: IUser;
-    hints?: IHint[];
-    votes?: IVote[];
+    hints: IHint[];
+    votes: IVote[];
     scores: IScore[];
+    revealed?: IRevealed;
+    phaseEndsAt?: number;
 }
 
-export default gameState;
+export default IGameState;
+export { IRevealed };

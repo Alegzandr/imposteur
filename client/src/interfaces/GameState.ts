@@ -1,14 +1,21 @@
 import IUser from './User';
 
-interface gameState {
-    phase: string;
-    readyUsers?: IUser[];
-    words?: { word: string; antonym: string }[];
-    impostor?: IUser;
-    currentPlayer?: IUser;
-    hints?: { word: string; user: IUser }[];
-    votes?: { vote: IUser; user: IUser }[];
-    scores: { score: number; user: IUser }[];
+interface IRevealed {
+    word: string;
+    impostorWord: string;
+    impostor: IUser;
 }
 
-export default gameState;
+interface IGameState {
+    phase: string;
+    readyUsers: IUser[];
+    currentPlayer?: IUser;
+    hints: { word: string; user: IUser }[];
+    votes: { vote: IUser; user: IUser }[];
+    scores: { score: number; user: IUser }[];
+    revealed?: IRevealed;
+    phaseEndsAt?: number;
+}
+
+export default IGameState;
+export type { IRevealed };

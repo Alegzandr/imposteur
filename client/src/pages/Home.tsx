@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { PiUserCircleDuotone } from 'react-icons/pi';
 import { AiOutlineReload } from 'react-icons/ai';
 import { Link, useNavigate } from 'react-router-dom';
@@ -8,10 +8,11 @@ import IRoom from '../interfaces/Room';
 import capitalize from '../utils/capitalize';
 
 function Home() {
-    const { isAuth, isLoading, user, signIn, socket } = useAuth();
+    const { isAuth, isLoading, error, user, signIn, socket } = useAuth();
     const navigate = useNavigate();
     const [username, setUsername] = useState<string>('');
     const [rooms, setRooms] = useState<IRoom[]>([]);
+    const [createError, setCreateError] = useState<string>('');
 
     const handleLogin = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -26,6 +27,7 @@ function Home() {
 
     const handleCreate = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setCreateError('');
 
         try {
             const response = await fetch(
@@ -47,14 +49,14 @@ function Home() {
                 throw new Error(data.message);
             }
 
-            socket?.emit('roomCreated', data.room);
             navigate(`/room/${data.room.id}`);
-        } catch (error: any) {
-            console.error(error);
+        } catch (err) {
+            console.error(err);
+            setCreateError('Impossible de créer la partie.');
         }
     };
 
-    const fetchRooms = async () => {
+    const fetchRooms = useCallback(async () => {
         try {
             const response = await fetch(
                 `${import.meta.env.VITE_API_URL}/api/rooms`
@@ -67,26 +69,52 @@ function Home() {
             }
 
             setRooms(data.rooms);
-        } catch (error: any) {
-            console.error(error);
+        } catch (err) {
+            console.error(err);
         }
-    };
+    }, []);
 
+    // The room list stays in sync through socket events; the refresh button
+    // is only a manual fallback.
     useEffect(() => {
+        if (!socket) {
+            return;
+        }
+
         const handleRoomCreated = (newRoom: IRoom) => {
-            setRooms((prevRooms) => [...prevRooms, newRoom]);
+            setRooms((prevRooms) =>
+                prevRooms.some((r) => r.id === newRoom.id)
+                    ? prevRooms
+                    : [...prevRooms, newRoom]
+            );
         };
 
-        socket?.on('roomCreated', handleRoomCreated);
+        const handleRoomUpdated = (updatedRoom: IRoom) => {
+            setRooms((prevRooms) =>
+                prevRooms.map((r) =>
+                    r.id === updatedRoom.id ? updatedRoom : r
+                )
+            );
+        };
+
+        const handleRoomRemoved = (roomId: string) => {
+            setRooms((prevRooms) => prevRooms.filter((r) => r.id !== roomId));
+        };
+
+        socket.on('roomCreated', handleRoomCreated);
+        socket.on('roomUpdated', handleRoomUpdated);
+        socket.on('roomRemoved', handleRoomRemoved);
 
         return () => {
-            socket?.off('roomCreated', handleRoomCreated);
+            socket.off('roomCreated', handleRoomCreated);
+            socket.off('roomUpdated', handleRoomUpdated);
+            socket.off('roomRemoved', handleRoomRemoved);
         };
     }, [socket]);
 
     useEffect(() => {
         fetchRooms();
-    }, []);
+    }, [fetchRooms, isAuth]);
 
     return (
         <>
@@ -96,7 +124,9 @@ function Home() {
                         Jouer
                     </h2>
 
-                    {!isAuth ? (
+                    {isLoading ? (
+                        <Loader />
+                    ) : !isAuth ? (
                         <form
                             className="h-full flex flex-col justify-center gap-4"
                             onSubmit={handleLogin}
@@ -112,15 +142,18 @@ function Home() {
                                         capitalize(e.target.value.trimStart())
                                     )
                                 }
-                                min={3}
-                                max={16}
+                                minLength={3}
+                                maxLength={16}
                             />
                             <button className="border focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 bg-zinc-800 text-white border-zinc-600 hover:bg-zinc-700 hover:border-zinc-600 focus:ring-zinc-700 transition-all">
                                 Se connecter
                             </button>
+                            {error ? (
+                                <p className="text-red-400 text-sm">{error}</p>
+                            ) : (
+                                <></>
+                            )}
                         </form>
-                    ) : isLoading ? (
-                        <Loader />
                     ) : (
                         <>
                             <div className="text-9xl text-zinc-200">
@@ -137,6 +170,13 @@ function Home() {
                                 <button className="border focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 bg-zinc-800 text-white border-zinc-600 hover:bg-zinc-700 hover:border-zinc-600 focus:ring-zinc-700 transition-all">
                                     Créer une partie
                                 </button>
+                                {createError ? (
+                                    <p className="text-red-400 text-sm">
+                                        {createError}
+                                    </p>
+                                ) : (
+                                    <></>
+                                )}
                             </form>
                         </>
                     )}
@@ -185,20 +225,21 @@ function Home() {
                     </p>
                 ) : (
                     <ul className="flex gap-2 flex-wrap self-start">
-                        {rooms.map((room) => (
-                            <li key={room.id}>
-                                {room.users.length > 0 ? (
+                        {rooms.map((room) =>
+                            room.users.length > 0 ? (
+                                <li key={room.id}>
                                     <Link
                                         to={`/room/${room.id}`}
                                         className="font-medium mr-2 px-4 py-2 rounded bg-gray-700 text-blue-400 border hover:border-blue-400 transition-all"
                                     >
-                                        Room de {room.users[0].username}
+                                        Room de {room.users[0].username} (
+                                        {room.users.length}/10)
                                     </Link>
-                                ) : (
-                                    <></>
-                                )}
-                            </li>
-                        ))}
+                                </li>
+                            ) : (
+                                <></>
+                            )
+                        )}
                     </ul>
                 )}
             </div>

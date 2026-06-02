@@ -14,7 +14,7 @@ const port = process.env.PORT || 3000;
 app.use(json());
 
 const corsOptions: ICorsOptions = {
-    origin: process.env.CLIENT_URL as string,
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
     optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
